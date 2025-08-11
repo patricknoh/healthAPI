@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="음식명을 입력하면 칼로리와 영양 정보를 제공하는 웹 애플리케이션">
+    <meta name="keywords" content="칼로리, 영양정보, 음식, 건강, 다이어트">
+    <meta name="author" content="칼로리 계산기">
+    <title>건강똑 칼로리 계산기 - 공공데이터 기반 영양정보</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ <span class="orange">건강똑</span> 칼로리 계산기</h1>
+            <p>공공데이터 포털의 영양정보를 활용한 정확한 칼로리 정보</p>
+            <div class="api-status">
+                <span id="apiStatus" class="status-indicator">API 연결 확인 중...</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="main-flex-row">
+                <section class="search-section">
+                    <div class="search-box">
+                        <input type="text" 
+                               id="foodInput" 
+                               placeholder="음식명을 입력하세요 (예: 자장면, 콩국수, 회덮밥, 돼지고기덮밥, 잔치국수, 삼겹살구이)" 
+                               autocomplete="off"
+                               list="foodSuggestions"
+                               required>
+                        <datalist id="foodSuggestions">
+                            <option value="자장면"></option>
+                            <option value="콩국수"></option>
+                            <option value="회덮밥"></option>
+                            <option value="돼지고기덮밥"></option>
+                            <option value="잔치국수"></option>
+                            <option value="삼겹살구이"></option>
+                        </datalist>
+                        <button id="searchBtn" type="submit">
+                            <span class="btn-text">검색</span>
+                            <span class="btn-icon">🔍</span>
+                        </button>
+                    </div>
+                    
+                    <div class="search-options">
+                        <div class="option-group">
+                            <label for="searchType">검색 유형:</label>
+                            <select id="searchType">
+                                <option value="name">음식명</option>
+                                <option value="category">카테고리</option>
+                                <option value="ingredient">재료</option>
+                            </select>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label for="resultCount">결과 수:</label>
+                            <select id="resultCount">
+                                <option value="10">10개</option>
+                                <option value="20" selected>20개</option>
+                                <option value="50">50개</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="quick-search">
+                        <span>빠른 검색:</span>
+                        <button class="quick-btn" data-food="고등어">고등어</button>
+                        <button class="quick-btn" data-food="라면">라면</button>
+                        <button class="quick-btn" data-food="김밥">김밥</button>
+                        <button class="quick-btn" data-food="햄버거">햄버거</button>
+                        <button class="quick-btn" data-food="피자">피자</button>
+                        <button class="quick-btn" data-food="녹차">녹차</button>
+                        <button class="quick-btn" data-food="콜라">콜라</button>
+                        <button class="quick-btn" data-food="삼겹살구이">삼겹살구이</button>
+                    </div>
+
+                    <section class="today-food-section" id="todayFoodSection">
+                        <h2>오늘 먹은 음식</h2>
+                        <ul id="todayFoodList" class="today-food-list">
+                            <!-- JS로 동적 추가 -->
+                        </ul>
+                        <div class="total-calories-row">
+                            <span>총 칼로리: </span><span id="totalCalories">0</span> kcal
+                        </div>
+                        <button id="clearTodayFoodBtn" type="button" class="clear-btn">전체 삭제</button>
+                        <p class="today-food-guide">일반적인 성인 남성의 한 끼 식사 칼로리는 약 700~900kcal, 성인 여성은 약 700kcal 내외가 평균 권장량입니다.</p>
+                    </section>
+                </section>
+
+                <section class="result-section" id="resultSection" style="display: none;">
+                    <div class="food-info">
+                        <div class="food-header">
+                            <h2 id="foodName"></h2>
+                            <div class="calorie-badge">
+                                <span id="calories"></span> kcal
+                            </div>
+                        </div>
+                        
+                        <div class="food-details">
+                            <div class="detail-item">
+                                <span class="label">분류:</span>
+                                <span class="value" id="category"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">제조사/브랜드:</span>
+                                <span class="value" id="manufacturer"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">1회 제공량:</span>
+                                <span class="value" id="servingSize"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="nutrition-grid">
+                            <div class="nutrition-item">
+                                <span class="label">탄수화물</span>
+                                <span class="value" id="carbs"></span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="label">단백질</span>
+                                <span class="value" id="protein"></span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="label">지방</span>
+                                <span class="value" id="fat"></span>
+                            </div>
+                            <div class="nutrition-item">
+                                <span class="label">나트륨</span>
+                                <span class="value" id="sodium"></span>
+                            </div>
+                        </div>
+
+                        <div class="additional-info">
+                            <h3>추가 영양정보</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">식이섬유</span>
+                                    <span class="value" id="fiber"></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">당류</span>
+                                    <span class="value" id="sugar"></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">콜레스테롤</span>
+                                    <span class="value" id="cholesterol"></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">칼슘</span>
+                                    <span class="value" id="calcium"></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">철분</span>
+                                    <span class="value" id="iron"></span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">칼륨</span>
+                                    <span class="value" id="potassium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="data-source">
+                            <p>📊 데이터 출처: <a href="https://www.data.go.kr" target="_blank" rel="noopener">공공데이터 포털</a></p>
+                            <p>🕒 최종 업데이트: <span id="lastUpdated"></span></p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>공공데이터에서 정보를 검색하고 있습니다...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </section>
+
+            <section class="error" id="error" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3>검색 결과가 없습니다</h3>
+                <p>입력하신 음식을 찾을 수 없습니다. 다른 음식명을 입력해보세요.</p>
+                <div class="error-suggestions">
+                    <h4>검색 팁:</h4>
+                    <ul>
+                        <li>정확한 음식명을 입력해주세요</li>
+                        <li>브랜드명을 포함해보세요 (예: "농심 신라면")</li>
+                        <li>일반적인 음식명을 사용해보세요</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="api-info" id="apiInfo" style="display: none;">
+                <h3>API 정보</h3>
+                <div class="api-details">
+                    <p><strong>서비스명:</strong> <span id="apiServiceName"></span></p>
+                    <p><strong>요청 수:</strong> <span id="requestCount"></span></p>
+                    <p><strong>응답 시간:</strong> <span id="responseTime"></span></p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p>© 2024 칼로리 계산기 - 공공데이터 기반 영양정보 서비스</p>
+                <p>본 서비스는 공공데이터 포털의 영양정보 데이터를 활용합니다.</p>
+                <div class="footer-links">
+                    <a href="https://www.data.go.kr" target="_blank" rel="noopener">공공데이터 포털</a>
+                    <a href="#" id="aboutLink">서비스 소개</a>
+                    <a href="#" id="contactLink">문의하기</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 모달 다이얼로그 -->
+    <dialog id="aboutModal">
+        <div class="modal-content">
+            <h2>서비스 소개</h2>
+            <p>이 서비스는 공공데이터 포털의 영양정보 데이터를 활용하여 정확한 칼로리와 영양 정보를 제공합니다.</p>
+            <button id="closeModal">닫기</button>
+        </div>
+    </dialog>
+
+    <script src="script.js"></script>
+</body>
+</html> 
